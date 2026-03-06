@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { GrpcClientModule } from './grpc-client/grpc-client.module';
 import { SocketClientModule } from './socket-client/socket-client.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
+import { StopsModule } from './stops/stops.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { SocketClientModule } from './socket-client/socket-client.module';
     GrpcClientModule,
     SocketClientModule,
     WebhookModule,
+    VehiclesModule,
+    StopsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
