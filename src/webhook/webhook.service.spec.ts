@@ -1,12 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WebhookService } from './webhook.service';
+import { GrpcClientService } from '../grpc-client/grpc-client.service';
+
+const mockGrpcClientService = {
+  solveRoute: jest.fn().mockResolvedValue({
+    routes: [
+      {
+        vehicleId: 'v1',
+        steps: [{ stopId: 's1', lat: 4.6097, lng: -74.0817, arrivalOrder: 1 }],
+        totalDistance: 12.5,
+        estimatedTime: 25.0,
+      },
+    ],
+    totalCost: 100.0,
+    solvedAt: '2026-03-05T00:00:00.000Z',
+  }),
+};
 
 describe('WebhookService', () => {
   let service: WebhookService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WebhookService],
+      providers: [
+        WebhookService,
+        { provide: GrpcClientService, useValue: mockGrpcClientService },
+      ],
     }).compile();
 
     service = module.get<WebhookService>(WebhookService);
@@ -17,25 +36,41 @@ describe('WebhookService', () => {
   });
 
   describe('handleEvent', () => {
-    it('should return confirmation with correct counts', () => {
-      const result = service.handleEvent({
+    it('should call gRPC optimizer and return optimized routes', async () => {
+      const result = await service.handleEvent({
         eventType: 'new_order',
         vehicles: [
           { id: 'v1', lat: 4.711, lng: -74.0721, capacity: 100 },
-          { id: 'v2', lat: 4.635, lng: -74.083, capacity: 80 },
         ],
         stops: [
           { id: 's1', lat: 4.6097, lng: -74.0817, demand: 20 },
-          { id: 's2', lat: 4.658, lng: -74.094, demand: 15 },
-          { id: 's3', lat: 4.624, lng: -74.063, demand: 30 },
         ],
       });
 
       expect(result.received).toBe(true);
       expect(result.eventType).toBe('new_order');
-      expect(result.vehicleCount).toBe(2);
-      expect(result.stopCount).toBe(3);
-      expect(result.timestamp).toBeDefined();
+      expect(result.vehicleCount).toBe(1);
+      expect(result.stopCount).toBe(1);
+      expect(result.optimizedRoutes).toBeDefined();
+      expect(result.optimizedRoutes.routes).toHaveLength(1);
+      expect(mockGrpcClientService.solveRoute).toHaveBeenCalled();
+    });
+
+    it('should use mock response when gRPC is unavailable', async () => {
+      mockGrpcClientService.solveRoute.mockRejectedValueOnce(
+        new Error('Connection refused'),
+      );
+
+      const result = await service.handleEvent({
+        eventType: 'traffic_jam',
+        vehicles: [{ id: 'v1', lat: 4.711, lng: -74.0721, capacity: 100 }],
+        stops: [{ id: 's1', lat: 4.6097, lng: -74.0817, demand: 20 }],
+      });
+
+      expect(result.received).toBe(true);
+      expect(result.optimizedRoutes).toBeDefined();
+      expect(result.optimizedRoutes.routes).toHaveLength(1);
+      expect(result.optimizedRoutes.solvedAt).toBeDefined();
     });
   });
 });
