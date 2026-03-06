@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WebhookService } from './webhook.service';
 import { GrpcClientService } from '../grpc-client/grpc-client.service';
+import { SocketClientService } from '../socket-client/socket-client.service';
+
+const mockSocketClientService = {
+  emitRouteUpdate: jest.fn(),
+  isConnected: jest.fn().mockReturnValue(false),
+};
 
 const mockGrpcClientService = {
   solveRoute: jest.fn().mockResolvedValue({
@@ -25,6 +31,7 @@ describe('WebhookService', () => {
       providers: [
         WebhookService,
         { provide: GrpcClientService, useValue: mockGrpcClientService },
+        { provide: SocketClientService, useValue: mockSocketClientService },
       ],
     }).compile();
 
@@ -39,12 +46,8 @@ describe('WebhookService', () => {
     it('should call gRPC optimizer and return optimized routes', async () => {
       const result = await service.handleEvent({
         eventType: 'new_order',
-        vehicles: [
-          { id: 'v1', lat: 4.711, lng: -74.0721, capacity: 100 },
-        ],
-        stops: [
-          { id: 's1', lat: 4.6097, lng: -74.0817, demand: 20 },
-        ],
+        vehicles: [{ id: 'v1', lat: 4.711, lng: -74.0721, capacity: 100 }],
+        stops: [{ id: 's1', lat: 4.6097, lng: -74.0817, demand: 20 }],
       });
 
       expect(result.received).toBe(true);
@@ -53,7 +56,12 @@ describe('WebhookService', () => {
       expect(result.stopCount).toBe(1);
       expect(result.optimizedRoutes).toBeDefined();
       expect(result.optimizedRoutes.routes).toHaveLength(1);
+      expect(result.socketConnected).toBe(false);
       expect(mockGrpcClientService.solveRoute).toHaveBeenCalled();
+      expect(mockSocketClientService.emitRouteUpdate).toHaveBeenCalledWith(
+        'new_order',
+        result.optimizedRoutes,
+      );
     });
 
     it('should use mock response when gRPC is unavailable', async () => {
@@ -71,6 +79,7 @@ describe('WebhookService', () => {
       expect(result.optimizedRoutes).toBeDefined();
       expect(result.optimizedRoutes.routes).toHaveLength(1);
       expect(result.optimizedRoutes.solvedAt).toBeDefined();
+      expect(mockSocketClientService.emitRouteUpdate).toHaveBeenCalled();
     });
   });
 });

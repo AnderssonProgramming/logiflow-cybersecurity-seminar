@@ -3,6 +3,7 @@ import { WebhookController } from './webhook.controller';
 import { WebhookService } from './webhook.service';
 import { WebhookEventDto } from './dto/webhook-event.dto';
 import { GrpcClientService } from '../grpc-client/grpc-client.service';
+import { SocketClientService } from '../socket-client/socket-client.service';
 
 const mockGrpcClientService = {
   solveRoute: jest.fn().mockResolvedValue({
@@ -10,6 +11,11 @@ const mockGrpcClientService = {
     totalCost: 0,
     solvedAt: '2026-03-05T00:00:00.000Z',
   }),
+};
+
+const mockSocketClientService = {
+  emitRouteUpdate: jest.fn(),
+  isConnected: jest.fn().mockReturnValue(false),
 };
 
 describe('WebhookController', () => {
@@ -28,6 +34,7 @@ describe('WebhookController', () => {
       providers: [
         WebhookService,
         { provide: GrpcClientService, useValue: mockGrpcClientService },
+        { provide: SocketClientService, useValue: mockSocketClientService },
       ],
     }).compile();
 

@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { GrpcClientModule } from './grpc-client/grpc-client.module';
+import { SocketClientModule } from './socket-client/socket-client.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { GrpcClientModule } from './grpc-client/grpc-client.module';
       isGlobal: true,
     }),
     GrpcClientModule,
+    SocketClientModule,
     WebhookModule,
   ],
   controllers: [AppController],

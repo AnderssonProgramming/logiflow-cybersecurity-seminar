@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WebhookEventDto } from './dto/webhook-event.dto';
 import { GrpcClientService } from '../grpc-client/grpc-client.service';
+import { SocketClientService } from '../socket-client/socket-client.service';
 import {
   SolveRouteRequest,
   SolveRouteResponse,
@@ -10,7 +11,10 @@ import {
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
-  constructor(private readonly grpcClient: GrpcClientService) {}
+  constructor(
+    private readonly grpcClient: GrpcClientService,
+    private readonly socketClient: SocketClientService,
+  ) {}
 
   async handleEvent(event: WebhookEventDto) {
     this.logger.log(
@@ -47,7 +51,8 @@ export class WebhookService {
       optimizedRoutes = this.buildMockResponse(grpcRequest);
     }
 
-    // TODO #140: Forward optimizedRoutes to Socket.io gateway (Elizabeth's service)
+    // Forward optimized routes to Socket.io gateway (Elizabeth's service)
+    this.socketClient.emitRouteUpdate(event.eventType, optimizedRoutes);
 
     return {
       received: true,
@@ -55,13 +60,12 @@ export class WebhookService {
       vehicleCount: event.vehicles.length,
       stopCount: event.stops.length,
       optimizedRoutes,
+      socketConnected: this.socketClient.isConnected(),
       timestamp: new Date().toISOString(),
     };
   }
 
-  private buildMockResponse(
-    request: SolveRouteRequest,
-  ): SolveRouteResponse {
+  private buildMockResponse(request: SolveRouteRequest): SolveRouteResponse {
     return {
       routes: request.vehicles.map((vehicle, vi) => ({
         vehicleId: vehicle.id,
