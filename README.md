@@ -75,15 +75,15 @@ This repository contains the **Core Backend** — the central NestJS service tha
                                            │          ▼          │
                                            │  ┌───────────────┐  │
                                            │  │ SocketClient   │──┼──▶ Socket.io :3001
-                                           │  │ Module         │  │    (Elizabeth - Gateway)
+                                           │  │ Module         │  │    
                                            │  └───────────────┘  │
-                                           │                      │
+                                           │                     │
                                            │  ┌───────────────┐  │
-                                           │  │ VehiclesModule │  │   REST CRUD
+                                           │  │ VehiclesModule │ │   REST CRUD
                                            │  ├───────────────┤  │   /api/v1/vehicles
-                                           │  │ StopsModule    │  │   /api/v1/stops
+                                           │  │ StopsModule    │ │   /api/v1/stops
                                            │  └───────────────┘  │
-                                           └──────────────────────┘
+                                           └─────────────────────┘
 ```
 
 ### Data Flow
@@ -93,7 +93,7 @@ Event (n8n) → Webhook → Build gRPC Request → Call Optimizer → Receive Ro
                                                                     │
                                      ┌──────────────────────────────┘
                                      ▼
-                              Emit to Socket.io  →  Elizabeth's Gateway  → Map UI
+                              Emit to Socket.io → Map UI
                                      │
                                      ▼
                               Return HTTP Response to n8n

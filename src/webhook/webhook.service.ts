@@ -51,7 +51,6 @@ export class WebhookService {
       optimizedRoutes = this.buildMockResponse(grpcRequest);
     }
 
-    // Forward optimized routes to Socket.io gateway (Elizabeth's service)
     this.socketClient.emitRouteUpdate(event.eventType, optimizedRoutes);
 
     return {
