@@ -71,8 +71,7 @@
     });
 
     socket.on('route:update', (data) => {
-      addLog('event-route',
-        `Route update for ${data.vehicleId} → ${data.stops.length} stops, ETA: ${data.estimatedTime} min, polyline: ${data.polyline.length} points`
+      addLog('event-route',`Route update for ${data.vehicleId} → ${data.stops.length} stops, ETA: ${data.estimatedTime} min, polyline: ${data.polyline.length} points, distance: ${data.totalDistance}m, event: ${data.eventType}`
       );
     });
 
@@ -102,7 +101,11 @@
             { lat: 4.6900, lng: -74.0600 },
             { lat: 4.6800, lng: -74.0500 }
           ],
-          estimatedTime: 35
+          estimatedTime: 35,
+          totalDistance: 8500,
+          eventType: 'traffic_jam',
+          totalCost: 120,
+          solvedAt: new Date().toISOString()
         })
       });
       const result = await response.json();

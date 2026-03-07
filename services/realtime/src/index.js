@@ -8,15 +8,63 @@ const PORT = process.env.PORT || 3001;
 
 async function main() {
   await initializeServer();
+
   registerRooms(io);
   startPositionBroadcast(io);
 
-  // Endpoint HTTP 
   app.use(require('express').json());
+
   app.post('/emit/route-update', (req, res) => {
-    const { vehicleId, stops, estimatedTime, polyline } = req.body;
-    emitRouteUpdate(io, vehicleId, { stops, estimatedTime, polyline });
+    const { 
+      vehicleId, 
+      stops, 
+      estimatedTime, 
+      polyline,
+      totalDistance,
+      eventType,
+      totalCost,
+      solvedAt
+    } = req.body;
+
+    emitRouteUpdate(
+      io, 
+      vehicleId, 
+      { stops, estimatedTime, polyline, totalDistance },
+      { eventType, totalCost, solvedAt }
+    );
+
     res.json({ success: true });
+  });
+
+  io.on('connection', (socket) => {
+    socket.on('route-update', (incoming) => {
+      console.log('Core backend/front connected:', socket.id);
+
+      const routes = Array.isArray(incoming?.routes) ? incoming.routes : [];
+
+      routes.forEach((route) => {
+        const vehicleId = route.vehicleId;
+        if (!vehicleId) return;
+
+        const routeData = {
+          stops: (route.steps || []).map((s) => ({
+            id: s.stopId,
+            lat: s.lat,
+            lng: s.lng,
+            order: s.arrivalOrder,
+          })),
+          polyline: [],
+          estimatedTime: route.estimatedTime,
+          totalDistance: route.totalDistance,
+        };
+
+        emitRouteUpdate(io, vehicleId, routeData, {
+          eventType: incoming.eventType,
+          totalCost: incoming.totalCost,
+          solvedAt: incoming.solvedAt,
+        });
+      });
+    });
   });
 
   httpServer.listen(PORT, () => {

@@ -1,13 +1,16 @@
-function emitRouteUpdate(io, vehicleId, routeData) {
+function emitRouteUpdate(io, vehicleId, routeData, meta = {}) {
   const payload = {
     vehicleId,
-    stops: routeData.stops,
+    stops: routeData.stops || [],
     polyline: routeData.polyline || [],
     estimatedTime: routeData.estimatedTime,
+    totalDistance: routeData.totalDistance,
+    eventType: meta.eventType,
+    totalCost: meta.totalCost,
+    solvedAt: meta.solvedAt,
     timestamp: new Date().toISOString(),
   };
 
-  // Emit to fleet and vehicle-specific rooms
   io.to('fleet').emit('route:update', payload);
   io.to(`vehicle:${vehicleId}`).emit('route:update', payload);
 
