@@ -155,7 +155,7 @@ logiflow-core-backend/
 │   │   ├── interfaces/
 │   │   │   └── route-optimizer.interface.ts  # TypeScript interfaces
 │   │   └── proto/
-│   │       └── route-optimizer.proto         # Protobuf service definition
+│   │       └── (shared at ../../shared/proto/route-optimizer.proto)
 │   │
 │   ├── socket-client/                # Socket.io client to Elizabeth's gateway
 │   │   ├── socket-client.service.ts  # io() connection, emitRouteUpdate()
@@ -337,7 +337,7 @@ Valid `eventType` values: `traffic_jam`, `new_order`, `vehicle_breakdown`, `weat
 
 Connects to Python/VROOM optimizer via gRPC (Protocol Buffers).
 
-- **Proto file:** [`src/grpc-client/proto/route-optimizer.proto`](src/grpc-client/proto/route-optimizer.proto)
+- **Proto file:** [`../../shared/proto/route-optimizer.proto`](../../shared/proto/route-optimizer.proto)
 - **Service:** `RouteOptimizer.SolveRoute`
 - **Fallback:** When the optimizer is unavailable, the backend generates a **mock response** (round-robin stop assignment per vehicle) so development isn't blocked.
 

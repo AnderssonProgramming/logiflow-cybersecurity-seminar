@@ -30,7 +30,9 @@ export class GrpcClientService implements OnModuleInit {
     const result = this.routeOptimizerService.solveRoute(request);
 
     // gRPC in NestJS returns Observable; convert to Promise
-    const response = await firstValueFrom(result as unknown as Observable<SolveRouteResponse>);
+    const response = await firstValueFrom(
+      result as unknown as Observable<SolveRouteResponse>,
+    );
 
     this.logger.log(
       `Optimizer returned ${response.routes.length} routes, total cost: ${response.totalCost}`,
