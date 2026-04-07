@@ -11,6 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { RetryModule } from './common/retry/retry.module';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { AuthModule } from './auth/auth.module';
+import { MetricsService } from './metrics/metrics.service';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { AuthModule } from './auth/auth.module';
     StopsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, MetricsService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

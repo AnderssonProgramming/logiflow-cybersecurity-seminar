@@ -1,21 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Request, Response } from 'express';
-import * as promClient from 'prom-client';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const metricsRegistry = new promClient.Registry();
-
-  promClient.collectDefaultMetrics({
-    register: metricsRegistry,
-    prefix: 'logiflow_gateway_',
-  });
 
   app.enableCors();
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1', {
+    exclude: [{ path: 'metrics', method: RequestMethod.GET }],
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const swaggerConfig = new DocumentBuilder()
@@ -42,12 +36,6 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
     },
-  });
-
-  const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.get('/metrics', async (_req: Request, res: Response) => {
-    res.setHeader('Content-Type', metricsRegistry.contentType);
-    res.send(await metricsRegistry.metrics());
   });
 
   const port = process.env.PORT ?? 3002;
