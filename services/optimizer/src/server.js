@@ -1,8 +1,10 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const axios = require('axios');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const promClient = require('prom-client');
 const { GoogleRoutesClient, profileToGoogleTravelMode } = require('./google-routes-client');
 
 const protoPathCandidates = [
@@ -30,8 +32,33 @@ const AI_PREDICTOR_URL = process.env.AI_PREDICTOR_URL || 'http://ai-predictor:50
 const AI_PREDICTOR_TIMEOUT_MS = Number(process.env.AI_PREDICTOR_TIMEOUT_MS || 5000);
 const REDIS_URL = process.env.REDIS_URL;
 const REDIS_ROUTE_TTL_SECONDS = Number(process.env.REDIS_ROUTE_TTL_SECONDS || 3600);
+const METRICS_PORT = Number(process.env.METRICS_PORT || 9102);
 
 let redisClient;
+const metricsRegistry = new promClient.Registry();
+
+promClient.collectDefaultMetrics({
+  register: metricsRegistry,
+  prefix: 'logiflow_optimizer_',
+});
+
+function startMetricsServer() {
+  const server = http.createServer(async (req, res) => {
+    if (req.url !== '/metrics') {
+      res.statusCode = 404;
+      res.end('Not Found');
+      return;
+    }
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', metricsRegistry.contentType);
+    res.end(await metricsRegistry.metrics());
+  });
+
+  server.listen(METRICS_PORT, '0.0.0.0', () => {
+    console.log(`Metrics server listening on port ${METRICS_PORT}`);
+  });
+}
 
 const googleRoutesClient = new GoogleRoutesClient({
   apiKey: process.env.GOOGLE_MAPS_API_KEY,
@@ -513,6 +540,8 @@ async function optimizeRoutes(call, callback) {
 }
 
 function main() {
+  startMetricsServer();
+
   const server = new grpc.Server();
   server.addService(proto.RouteOptimizer.service, {
     optimizeRoutes: optimizeRoutes,

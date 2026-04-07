@@ -4,6 +4,7 @@ const { startPositionBroadcast } = require('./events/position');
 const { emitRouteUpdate } = require('./events/routeUpdate');
 const { checkHeartbeats } = require('./heartbeat');
 const { authMiddleware } = require('./middleware/auth');
+const promClient = require('prom-client');
 require('dotenv').config();
 
 const vehicleHeartbeats = {};
@@ -13,6 +14,12 @@ vehicleHeartbeats['v-002'] = 0;
 vehicleHeartbeats['v-003'] = 0;
 
 const offlineVehicles = new Set();
+
+const metricsRegistry = new promClient.Registry();
+promClient.collectDefaultMetrics({
+  register: metricsRegistry,
+  prefix: 'logiflow_realtime_',
+});
 
 
 const OFFLINE_THRESHOLD_MS = 15000; 
@@ -29,6 +36,11 @@ async function main() {
   startPositionBroadcast(io, vehicleHeartbeats);
 
   app.use(require('express').json());
+
+  app.get('/metrics', async (_req, res) => {
+    res.set('Content-Type', metricsRegistry.contentType);
+    res.send(await metricsRegistry.metrics());
+  });
 
   app.post('/emit/route-update', (req, res) => {
     const { 
