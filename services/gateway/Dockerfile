@@ -13,4 +13,4 @@ RUN npx tsc -p tsconfig.build.json
 
 EXPOSE 3002
 
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "-r", "./dist/src/tracing.js", "dist/src/main.js"]

@@ -1,6 +1,7 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
+const { incrementUnauthorizedSocketAttempts } = require('../metrics');
 
 /**
  * Socket.io JWT middleware.
@@ -11,6 +12,7 @@ function authMiddleware(socket, next) {
   const token = socket.handshake.auth?.token;
 
   if (!token) {
+    incrementUnauthorizedSocketAttempts();
     return next(new Error('Unauthorized'));
   }
 
@@ -23,6 +25,7 @@ function authMiddleware(socket, next) {
     next();
   } catch (err) {
     console.error('[auth] JWT verification failed:', err.message);
+    incrementUnauthorizedSocketAttempts();
     next(new Error('Unauthorized'));
   }
 }

@@ -14,6 +14,12 @@ import {
 } from '../common/constants/correlation-id.constant';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import * as promClient from 'prom-client';
+
+const webhookRequestsCounter = new promClient.Counter({
+  name: 'logiflow_webhook_requests_total',
+  help: 'Total incoming webhook requests handled by gateway',
+});
 
 @Controller('webhook')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +34,8 @@ export class WebhookController {
     @Body() event: WebhookEventDto,
     @Headers(CORRELATION_ID_HEADER) correlationId?: string,
   ) {
+    webhookRequestsCounter.inc();
+
     const effectiveCorrelationId = correlationId ?? UNKNOWN_CORRELATION_ID;
     this.logger.log(
       `Incoming webhook: ${event.eventType} | correlationId: ${effectiveCorrelationId}`,

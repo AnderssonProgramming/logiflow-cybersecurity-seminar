@@ -6,8 +6,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'crypto';
+import * as promClient from 'prom-client';
 import { AUTH_ROLES, type AuthRole } from './auth-roles';
 import { PrismaService } from '../prisma/prisma.service';
+
+const authFailuresCounter = new promClient.Counter({
+  name: 'logiflow_auth_failures_total',
+  help: 'Total failed authentication attempts in gateway',
+});
 
 type RefreshTokenWriteClient = {
   refreshToken: {
@@ -87,6 +93,7 @@ export class AuthService {
     );
 
     if (username !== demoUsername || password !== demoPassword) {
+      authFailuresCounter.inc();
       throw new UnauthorizedException('Invalid credentials');
     }
 

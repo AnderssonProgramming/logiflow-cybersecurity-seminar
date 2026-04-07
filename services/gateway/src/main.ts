@@ -1,3 +1,4 @@
+import './tracing';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';

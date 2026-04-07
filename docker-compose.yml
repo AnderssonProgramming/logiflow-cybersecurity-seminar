@@ -93,6 +93,8 @@ services:
     environment:
       PORT: 3001
       REDIS_URL: redis://redis:6379
+      OTEL_SERVICE_NAME: logiflow-realtime
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "3001:3001"
     depends_on:
@@ -118,6 +120,8 @@ services:
       JWT_EXPIRES_IN: 1h
       AUTH_DEMO_USERNAME: demo
       AUTH_DEMO_PASSWORD: demo123
+      OTEL_SERVICE_NAME: logiflow-gateway
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
     ports:
       - "3002:3002"
     depends_on:
