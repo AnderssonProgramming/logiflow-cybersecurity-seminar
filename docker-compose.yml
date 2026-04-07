@@ -102,18 +102,16 @@ services:
       - logiflow-security-net
 
   gateway:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     container_name: logiflow-gateway
-    working_dir: /workspace/services/gateway
-    command: sh -c "npm install && npx prisma generate && node -r ts-node/register/transpile-only src/main.ts"
-    volumes:
-      - .:/workspace
     environment:
       PORT: 3002
       DATABASE_URL: postgresql://postgres:logiflow_dev@postgres:5432/logiflow_gateway?schema=public
       GRPC_OPTIMIZER_HOST: optimizer
       GRPC_OPTIMIZER_PORT: 50051
-      GRPC_OPTIMIZER_PROTO_PATH: ../../shared/proto/optimizer.proto
+      GRPC_OPTIMIZER_PROTO_PATH: /app/shared/proto/optimizer.proto
       SOCKETIO_SERVER_HOST: realtime
       SOCKETIO_SERVER_PORT: 3001
       JWT_SECRET: your-super-secret-key-change-this-in-production
